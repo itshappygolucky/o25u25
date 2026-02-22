@@ -1,9 +1,18 @@
 import { useState, useEffect } from "react";
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+  Platform,
+  PermissionsAndroid,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../lib/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as BleHr from "../lib/ble-hr";
 import type { ThemeMode } from "../lib/ThemeContext";
@@ -18,15 +27,47 @@ export default function SettingsScreen() {
   const [hrDeviceName, setHrDeviceName] = useState<string | null>(null);
   const [hrScanning, setHrScanning] = useState(false);
   const [hrDevices, setHrDevices] = useState<BleHr.BleHrDevice[]>([]);
+  const [connectingDeviceId, setConnectingDeviceId] = useState<string | null>(null);
+  const [hrScanError, setHrScanError] = useState<string | null>(null);
 
   useEffect(() => {
     AsyncStorage.getItem(HR_DEVICE_NAME_KEY).then(setHrDeviceName);
   }, []);
 
+  const requestBleScanPermissions = async (): Promise<boolean> => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      setHrScanError("Location permission is required to scan for sensors.");
+      return false;
+    }
+    if (Platform.OS === "android") {
+      const apiLevel = (Platform as { Version?: number }).Version ?? 0;
+      if (apiLevel >= 31) {
+        const perms = [
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+        ] as const;
+        const result = await PermissionsAndroid.requestMultiple(perms);
+        const denied = perms.some((p) => result[p] !== PermissionsAndroid.RESULTS.GRANTED);
+        if (denied) {
+          setHrScanError("Bluetooth permission is required to scan for sensors.");
+          return false;
+        }
+      }
+    }
+    setHrScanError(null);
+    return true;
+  };
+
   const handleScanHr = async () => {
     if (!BleHr.isBleAvailable()) return;
+    const allowed = await requestBleScanPermissions();
+    if (!allowed) {
+      return;
+    }
     setHrScanning(true);
     setHrDevices([]);
+    setHrScanError(null);
     const seen = new Set<string>();
     await BleHr.scanForDevices(
       (device) => {
@@ -41,6 +82,7 @@ export default function SettingsScreen() {
 
   const handleSelectHrDevice = async (deviceId: string, name: string | null) => {
     if (!BleHr.isBleAvailable()) return;
+    setConnectingDeviceId(deviceId);
     try {
       const { disconnect } = await BleHr.connectAndSubscribe(deviceId, {
         onBpm: () => {},
@@ -52,6 +94,8 @@ export default function SettingsScreen() {
       await disconnect();
     } catch (_) {
       setHrDevices([]);
+    } finally {
+      setConnectingDeviceId(null);
     }
   };
 
@@ -128,10 +172,18 @@ export default function SettingsScreen() {
         ) : (
           <>
             {hrDeviceName ? (
-              <View style={styles.hrConnectedRow}>
-                <Ionicons name="heart-outline" size={20} color={theme.icon} />
+              <View style={[styles.hrConnectedRow, styles.hrConnectedBadge, { backgroundColor: theme.background }]}>
+                <Ionicons name="checkmark-circle" size={22} color={theme.icon} />
                 <Text style={[styles.optionLabel, { color: theme.text }]}>
                   Connected: {hrDeviceName}
+                </Text>
+              </View>
+            ) : null}
+            {hrScanError ? (
+              <View style={[styles.hrErrorWrap, { backgroundColor: theme.background }]}>
+                <Ionicons name="warning-outline" size={20} color={theme.textMuted} />
+                <Text style={[styles.hrErrorText, { color: theme.textMuted }]}>
+                  {hrScanError}
                 </Text>
               </View>
             ) : null}
@@ -152,22 +204,41 @@ export default function SettingsScreen() {
               )}
             </Pressable>
             {hrDevices.length > 0 && (
-              <View style={styles.deviceList}>
-                {hrDevices.map((d) => (
-                  <Pressable
-                    key={d.id}
-                    onPress={() => handleSelectHrDevice(d.id, d.name)}
-                    style={({ pressed }) => [
-                      styles.deviceItem,
-                      { opacity: pressed ? 0.7 : 1 },
-                    ]}
-                  >
-                    <Text style={[styles.optionLabel, { color: theme.text }]}>
-                      {d.name ?? d.id}
-                    </Text>
-                    <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
-                  </Pressable>
-                ))}
+              <View style={styles.deviceListWrap}>
+                <Text style={[styles.availableSensorsLabel, { color: theme.textMuted }]}>
+                  Available sensors
+                </Text>
+                <View style={styles.deviceList}>
+                  {hrDevices.map((d) => {
+                    const isConnecting = connectingDeviceId === d.id;
+                    const displayName = d.name ?? d.id;
+                    return (
+                      <Pressable
+                        key={d.id}
+                        onPress={() => handleSelectHrDevice(d.id, d.name)}
+                        disabled={!!connectingDeviceId}
+                        style={({ pressed }) => [
+                          styles.deviceItem,
+                          {
+                            opacity: pressed && !isConnecting ? 0.7 : 1,
+                            backgroundColor: isConnecting ? theme.background : "transparent",
+                            borderRadius: 8,
+                            paddingHorizontal: 12,
+                          },
+                        ]}
+                      >
+                        <Text style={[styles.optionLabel, { color: theme.text }]} numberOfLines={1}>
+                          {displayName}
+                        </Text>
+                        {isConnecting ? (
+                          <ActivityIndicator size="small" color={theme.icon} />
+                        ) : (
+                          <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
+                        )}
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
             )}
           </>
@@ -246,7 +317,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+  },
+  hrConnectedBadge: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  hrErrorWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
     marginBottom: 4,
+  },
+  hrErrorText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
   },
   hrButton: {
     paddingVertical: 12,
@@ -256,8 +346,17 @@ const styles = StyleSheet.create({
   hrButtonText: {
     fontSize: 15,
   },
+  deviceListWrap: {
+    marginTop: 12,
+  },
+  availableSensorsLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
   deviceList: {
-    marginTop: 8,
     gap: 4,
   },
   deviceItem: {
@@ -265,6 +364,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 12,
-    paddingHorizontal: 4,
   },
 });

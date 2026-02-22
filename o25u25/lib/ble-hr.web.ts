@@ -20,6 +20,10 @@ export function isBleAvailable(): boolean {
   return false;
 }
 
+export async function getBleState(): Promise<null> {
+  return Promise.resolve(null);
+}
+
 export async function scanForDevices(
   _onDevice: (device: BleHrDevice) => void,
   _options?: { timeoutMs?: number }

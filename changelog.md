@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-02-22
+
+### Changed
+- Default theme set to Night (was Light)
+
+### Added
+- Settings HR sensor: show "Available sensors" list below when scanning; tap a sensor to connect, show "Connecting..." on that row, then "Connected: [name]" badge when done
+
+### Fixed
+- Scan for sensors: request location and (on Android 12+) BLUETOOTH_SCAN/BLUETOOTH_CONNECT before scanning so the available-sensors list is populated; show permission error message if denied
+- Android: fix BLE crash (PromiseImpl.reject parameter code null) by passing "UNKNOWN" instead of null in react-native-ble-plx BlePlxModule and SafePromise; add patch-package so the fix persists after npm install
+
 ## [1.0.0] - 2025-02-22
 
 ### Added

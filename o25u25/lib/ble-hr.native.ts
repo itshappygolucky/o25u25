@@ -46,6 +46,18 @@ export function isBleAvailable(): boolean {
   return getManager() !== null;
 }
 
+/** Current Bluetooth adapter state, or null if BLE is not available. */
+export async function getBleState(): Promise<'PoweredOn' | 'PoweredOff' | 'Unknown' | 'Resetting' | 'Unauthorized' | 'Unsupported' | null> {
+  const manager = getManager();
+  if (!manager) return null;
+  try {
+    const state = await manager.state();
+    return state as 'PoweredOn' | 'PoweredOff' | 'Unknown' | 'Resetting' | 'Unauthorized' | 'Unsupported';
+  } catch {
+    return null;
+  }
+}
+
 /** Scan for BLE devices. Returns when scan is stopped. */
 export async function scanForDevices(
   onDevice: (device: BleHrDevice) => void,

@@ -2,7 +2,7 @@
   "expo": {
     "name": "o25u25",
     "slug": "o25u25",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "o25u25",
@@ -25,7 +25,7 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.BLUETOOTH",
         "android.permission.BLUETOOTH_ADMIN",
-        "android.permission.BLUETOOTH_CONNECT"
+        "android.permission.BLUETOOTH_CONNECT","android.permission.BLUETOOTH_SCAN"
       ],
       "package": "com.itshappygolucky.o25u25"
     },
