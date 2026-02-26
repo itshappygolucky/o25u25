@@ -2,14 +2,15 @@
   "expo": {
     "name": "o25u25",
     "slug": "o25u25",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "o25u25",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.itshappygolucky.o25u25"
     },
     "android": {
       "adaptiveIcon": {
