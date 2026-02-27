@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-02-27
+
+### Added
+- Android: live lockscreen timer using system chronometer (NotificationCompat.setUsesChronometer + setWhen); when the run is active the notification time updates on the lockscreen without reopening the app (patch on expo-notifications)
+- Settings: "Forget sensor" button in Connect a HR sensor section to clear the saved device
+- Settings: "Connect a sensor" button in HR section; BLE-unavailable message only appears after tapping the button
+- Settings > Data: "Export backup (JSON)" and "Import backup (JSON)" buttons for round-tripping runs between devices or restoring from backups
+- Settings > Data: "Import from GPX (Strava / others)" button using file picker to import a .gpx file into a run
+ - Index: after ending a run, automatically open that run’s detail stats page so you can review it immediately
+- Index (web): "End run?" confirmation shown in an in-app modal popup instead of the browser confirm dialog
+- Index: when ending a run without a saved run (e.g. web), navigate to the last run’s detail instead of the runs list; only show runs list if there are no runs
+
+### Changed
+- Settings: content now scrolls vertically so all sections are reachable on smaller screens
+
+### Fixed
+- Settings (web): fix "ScrollView is not defined" crash by importing ScrollView from react-native
+
+### Technical
+- Settings: action buttons (connect sensor, export CSV, Strava) restyled as pill-shaped buttons for clearer affordance and consistency
+
 ## [1.2.0] - 2025-02-26
 
 ### Changed
@@ -45,6 +66,12 @@
 - Heart rate over time: Time/Distance toggle shown as two side-by-side segments; selected segment has darker background and shadow, unselected is flat and lighter
 - Pace and Heart rate charts: axis labels, tick labels, and stats under the graph use white text
 - Heart rate over time chart: remove "bpm" from Y-axis labels
+
+### Changed
+- Stats: Pie charts moved to bottom of page in a "Distribution" section; charts converted to donut style (inner radius 55%)
+- Stats: Progress section moved to top (below key stats); added monthly and yearly distance with comparison to previous period
+- Stats: Bar charts layout fixed so labels sit in a separate row below bars and no longer overlap section titles
+- Index: increase spacing and centering for "Previous runs" and "Stats" links so they aren't cramped on Android
 
 ## [1.1.0] - 2025-02-22
 

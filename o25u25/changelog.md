@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2025-02-27
+
+### Added
+- Run detail: "Export for Strava (GPX)" button — exports the run as a GPX file (download on web, share/save on device) for upload at strava.com/upload/select
+- Settings: Strava sync — connect Strava account to auto-upload runs when you stop; runs under 200 m and under 1 minute are not uploaded (avoids accidental/short runs)
+- Strava: OAuth connect/disconnect in Settings; token exchange via backend (EXPO_PUBLIC_STRAVA_CLIENT_ID and EXPO_PUBLIC_STRAVA_TOKEN_EXCHANGE_URL); GPX upload for runs with path, manual activity for runs without path
+- Stats: new Stats screen with key stats (runs, total distance, time running), distance-per-run and pace-trend charts, and weekly progress
+- Index: Stats button next to Previous runs linking to Stats screen
+- Stats: Pie charts under Progress – "Distance by run length" (share of total km in &lt;1km, 1–3km, 3–5km, 5+ km) and "Runs by weekday"
+- PieChart component (react-native-svg) for stats screen
+ - Index: after ending a run, automatically open that run’s detail stats page so you can review it immediately
+- Index (web): "End run?" confirmation shown in an in-app modal popup instead of the browser confirm dialog
+- Index: when ending a run without a saved run (e.g. web), navigate to the last run’s detail instead of the runs list; only show runs list if there are no runs
+
+### Changed
+- Stats: Pie charts moved to bottom of page in a "Distribution" section; charts converted to donut style (inner radius 55%)
+- Stats: Progress section moved to top (below key stats); added monthly and yearly distance with comparison to previous period
+- Stats: Bar charts layout fixed so labels sit in a separate row below bars and no longer overlap section titles
+
 ## [1.0.0] - 2025-02-22
 
 ### Added
